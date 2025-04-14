@@ -20,8 +20,10 @@ const pool = mysql.createPool({
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
   waitForConnections: true,
-  connectionLimit: 10, // Limit the number of connections
-  queueLimit: 0, // No limit for waiting connections
+  connectionLimit: 10,
+  queueLimit: 0,
+  connectTimeout: 10000, // Increase timeout (default is 10000ms)
+  acquireTimeout: 10000, 
 });
 
 // Route to handle form submission
