@@ -22,8 +22,8 @@ const pool = mysql.createPool({
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
-  connectTimeout: 10000, // Increase timeout (default is 10000ms)
-  acquireTimeout: 10000, 
+  connectTimeout: 30000, // Increase timeout (default is 10000ms)
+  acquireTimeout: 30000, 
 });
 
 // Route to handle form submission
