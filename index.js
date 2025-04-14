@@ -1,16 +1,19 @@
-import express from "express";
-import mysql from "mysql2";
-import cors from "cors";
-import dotenv from "dotenv";
+import express from 'express';
+import mysql from 'mysql2';
+import dotenv from 'dotenv';
+import cors from 'cors';
 
+// Load environment variables
 dotenv.config();
+
+// Initialize Express
 const app = express();
-const port = process.env.PORT || 3000;
 
-app.use(cors());
-app.use(express.json());
+// Middleware
+app.use(express.json()); // For parsing JSON bodies
+app.use(cors()); // Enable CORS for all requests (can restrict to specific domains later)
 
-// Create a MySQL connection
+// MySQL database connection
 const db = mysql.createConnection({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
@@ -18,33 +21,45 @@ const db = mysql.createConnection({
   database: process.env.DB_NAME,
 });
 
-// Connect to MySQL
+// Connect to MySQL database
 db.connect((err) => {
   if (err) {
-    console.error("Database connection failed:", err.stack);
+    console.error('Error connecting to the database:', err.stack);
     return;
   }
-  console.log("Connected to database.");
+  console.log('Connected to the MySQL database');
 });
 
-// Route to handle form submissions
-app.post("/submit", (req, res) => {
+// POST route to handle form submission
+app.post('/submit', async (req, res) => {
   const { name, mobile_number, location } = req.body;
 
+  // Basic validation
   if (!name || !mobile_number || !location) {
-    return res.status(400).json({ message: "All fields are required." });
+    return res.status(400).json({ message: 'All fields are required.' });
   }
 
-  const sql = "INSERT INTO usersrecord (Name, `Phone Number`, Location) VALUES (?, ?, ?)";
-  db.query(sql, [name, mobile_number, location], (err, result) => {
-    if (err) {
-      console.error("Error inserting data:", err);
-      return res.status(500).json({ message: "Database error." });
-    }
-    res.status(200).json({ message: "Data inserted successfully." });
-  });
+  try {
+    // Insert user data into database
+    const query = 'INSERT INTO usersrecord (name, mobile_number, location) VALUES (?, ?, ?)';
+    const values = [name, mobile_number, location];
+
+    db.query(query, values, (err, result) => {
+      if (err) {
+        console.error('Error inserting data into the database:', err);
+        return res.status(500).json({ message: 'Error saving data to the database.' });
+      }
+
+      res.status(200).json({ message: 'User data saved successfully!', data: result });
+    });
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ message: 'An unexpected error occurred.' });
+  }
 });
 
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
+// Start the server
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });
