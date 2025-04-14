@@ -1,51 +1,60 @@
-import express from "express";
-import mysql from "mysql2";
-import cors from "cors";
-import dotenv from "dotenv";
+import express from 'express';
+import mysql from 'mysql2';
+import dotenv from 'dotenv';
+import cors from 'cors';
 
 // Load environment variables from .env file
 dotenv.config();
 
 const app = express();
-const port = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors());
-app.use(express.json()); // To parse incoming JSON requests
+app.use(express.json());
 
-// Create a MySQL connection pool
-const pool = mysql.createPool({
+// MySQL Database Connection
+const db = mysql.createConnection({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
-  connectTimeout: 30000, // Increase timeout (default is 10000ms)
-  acquireTimeout: 30000, 
+  port: process.env.DB_PORT,
+});
+
+// Test DB Connection
+db.connect((err) => {
+  if (err) {
+    console.error('Error connecting to the database: ', err);
+    process.exit();
+  } else {
+    console.log('Connected to the database');
+  }
 });
 
 // Route to handle form submission
-app.post("/submit", (req, res) => {
+app.post('/submit', (req, res) => {
   const { name, mobile_number, location } = req.body;
 
-  // SQL query to insert data into the usersrecord table
-  const query = "INSERT INTO usersrecord (name, mobile_number, location) VALUES (?, ?, ?)";
+  if (!name || !mobile_number || !location) {
+    return res.status(400).send({ message: 'All fields are required.' });
+  }
 
-  // Execute the query using the connection pool
-  pool.query(query, [name, mobile_number, location], (err, result) => {
+  // SQL query to insert the data
+  const query = 'INSERT INTO usersrecord (name, mobile_number, location) VALUES (?, ?, ?)';
+
+  db.query(query, [name, mobile_number, location], (err, result) => {
     if (err) {
-      console.error("Error inserting data into the database: " + err.stack);
-      return res.status(500).json({ message: "Failed to insert data" });
+      console.error('Error inserting data into the database: ', err);
+      return res.status(500).send({ message: 'Error inserting data into the database.' });
     }
 
-    // Success response
-    res.status(200).json({ message: "Data inserted successfully", result });
+    console.log('Data inserted successfully:', result);
+    res.status(200).send({ message: 'Details submitted successfully!' });
   });
 });
 
-// Start the server
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
+// Start server
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });
