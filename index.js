@@ -3,7 +3,7 @@ import mysql from 'mysql2';
 import dotenv from 'dotenv';
 import cors from 'cors';
 
-// Load environment variables from .env file
+// Load environment variables
 dotenv.config();
 
 const app = express();
@@ -12,7 +12,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// MySQL Database Connection
+// MySQL Connection
 const db = mysql.createConnection({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
@@ -21,7 +21,7 @@ const db = mysql.createConnection({
   port: process.env.DB_PORT,
 });
 
-// Test DB Connection
+// Connect to DB
 db.connect((err) => {
   if (err) {
     console.error('Error connecting to the database: ', err);
@@ -31,7 +31,7 @@ db.connect((err) => {
   }
 });
 
-// Route to handle form submission
+// Submit route
 app.post('/submit', (req, res) => {
   const { name, mobile_number, location } = req.body;
 
@@ -39,9 +39,7 @@ app.post('/submit', (req, res) => {
     return res.status(400).send({ message: 'All fields are required.' });
   }
 
-  // SQL query to insert the data
   const query = 'INSERT INTO usersrecord (name, mobile_number, location) VALUES (?, ?, ?)';
-
   db.query(query, [name, mobile_number, location], (err, result) => {
     if (err) {
       console.error('Error inserting data into the database: ', err);
